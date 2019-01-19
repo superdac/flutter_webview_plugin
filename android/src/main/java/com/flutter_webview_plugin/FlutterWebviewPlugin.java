@@ -77,6 +77,8 @@ public class FlutterWebviewPlugin implements MethodCallHandler, PluginRegistry.A
             case "cleanCookies":
                 cleanCookies(call, result);
                 break;
+            case "loadData":
+                loadData(call, result);
             default:
                 result.notImplemented();
                 break;
@@ -228,6 +230,16 @@ public class FlutterWebviewPlugin implements MethodCallHandler, PluginRegistry.A
             CookieManager.getInstance().removeAllCookie();
         }
         result.success(null);
+    }
+
+    private void loadData(MethodCall call, final MethodChannel.Result result) {
+        String data = call.argument("data");
+        String mimeType = call.argument("mimeType");
+        String encoding = call.argument("encoding");
+        String baseURL = call.argument("baseURL");
+        if (webViewManager != null) {
+            webViewManager.loadData(data, mimeType, encoding, baseURL);
+        }
     }
 
     private int dp2px(Context context, float dp) {

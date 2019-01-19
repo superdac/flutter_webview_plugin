@@ -339,4 +339,15 @@ class WebviewManager {
             webView.stopLoading();
         }
     }
+
+    void loadData(String data, String mimeType, String encoding, String baseURL) {
+        if (webView == null){
+            return;
+        }
+        if(baseURL != null) {
+            webView.loadDataWithBaseURL(baseURL, data, mimeType, encoding, null);
+            return;
+        }
+        webView.loadData(data, mimeType, encoding);
+    }
 }

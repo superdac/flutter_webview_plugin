@@ -180,6 +180,17 @@ class FlutterWebviewPlugin {
   // Stops current loading process
   Future<Null> stopLoading() async => await _channel.invokeMethod('stopLoading');
 
+  Future<Null> loadData(String data, String mimeType, String encoding, { String baseURL }) async {
+    final args = <String, String> {
+      'data': data,
+      'encoding': encoding,
+      'mimeType': mimeType,
+      'baseURL': baseURL,
+    };
+
+    return await _channel.invokeMethod('loadData', args);
+  }
+
   /// Close all Streams
   void dispose() {
     _onDestroy.close();
