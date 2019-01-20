@@ -2,6 +2,7 @@ package com.flutter_webview_plugin;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.util.Base64;
 import android.util.Log;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -17,6 +18,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -205,7 +207,7 @@ class WebviewManager {
             boolean supportMultipleWindows,
             boolean appCacheEnabled,
             boolean allowFileURLs
-    ) {
+    ) throws UnsupportedEncodingException {
         webView.getSettings().setJavaScriptEnabled(withJavascript);
         webView.getSettings().setBuiltInZoomControls(withZoom);
         webView.getSettings().setSupportZoom(withZoom);
@@ -241,6 +243,18 @@ class WebviewManager {
 
         if(!scrollBar){
             webView.setVerticalScrollBarEnabled(false);
+        }
+
+        if(url.startsWith("data")) {
+            String[] parts = url.split(",");
+            String data = parts[1];
+
+            byte[] rawData = Base64.decode(data, Base64.DEFAULT);
+
+            String htmlString = new String(rawData, "UTF-8");
+            webView.loadDataWithBaseURL(null, htmlString, "text/html", "UTF-8", null);
+
+            return;
         }
 
         if (headers != null) {

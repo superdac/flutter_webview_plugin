@@ -11,6 +11,7 @@ import android.webkit.CookieManager;
 import android.webkit.ValueCallback;
 import android.os.Build;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 import io.flutter.plugin.common.MethodCall;
@@ -42,7 +43,11 @@ public class FlutterWebviewPlugin implements MethodCallHandler, PluginRegistry.A
     public void onMethodCall(MethodCall call, MethodChannel.Result result) {
         switch (call.method) {
             case "launch":
-                openUrl(call, result);
+                try {
+                    openUrl(call, result);
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
                 break;
             case "close":
                 close(call, result);
@@ -83,7 +88,7 @@ public class FlutterWebviewPlugin implements MethodCallHandler, PluginRegistry.A
         }
     }
 
-    private void openUrl(MethodCall call, MethodChannel.Result result) {
+    private void openUrl(MethodCall call, MethodChannel.Result result) throws UnsupportedEncodingException {
         boolean hidden = call.argument("hidden");
         String url = call.argument("url");
         String userAgent = call.argument("userAgent");
