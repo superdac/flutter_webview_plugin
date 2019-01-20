@@ -69,6 +69,9 @@ static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
     } else if ([@"reload" isEqualToString:call.method]) {
         [self reload];
         result(nil);
+    } else if([@"loadData" isEqualToString:call.method]) {
+        [self loadData:call];
+        result(nil);
     } else {
         result(FlutterMethodNotImplemented);
     }
@@ -280,6 +283,23 @@ static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
         [channel invokeMethod:@"onHttpError" arguments:@{@"code": [NSString stringWithFormat:@"%ld", response.statusCode], @"url": webView.URL.absoluteString}];
     }
     decisionHandler(WKNavigationResponsePolicyAllow);
+}
+
+-(void)loadData:(FlutterMethodCall*)call {
+    NSString* rawData = call.arguments[@"data"];
+    NSString* mimeType = call.arguments[@"mimeType"];
+    NSString* encoding = call.arguments[@"encoding"];
+    NSString* baseUrl = call.arguments[@"baseURL"];
+    if(!baseUrl) {
+        baseUrl = @"";
+    }
+    NSData* data = [rawData dataUsingEncoding:NSUTF8StringEncoding];
+    
+    if (@available(iOS 9.0, *)) {
+        [_webview loadData:data MIMEType:mimeType characterEncodingName:encoding baseURL:[NSURL URLWithString:baseUrl]];
+    } else {
+        @throw @"not available on version earlier than ios 9.0";
+    }
 }
 
 #pragma mark -- UIScrollViewDelegate
