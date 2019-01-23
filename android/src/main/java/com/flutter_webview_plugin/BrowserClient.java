@@ -1,6 +1,7 @@
 package com.flutter_webview_plugin;
 
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
@@ -44,8 +45,19 @@ public class BrowserClient extends WebViewClient {
     public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
         super.onReceivedHttpError(view, request, errorResponse);
         Map<String, Object> data = new HashMap<>();
-        data.put("url", request.getUrl().toString());
-        data.put("code", Integer.toString(errorResponse.getStatusCode()));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            data.put("url", request.getUrl().toString());
+            data.put("code", Integer.toString(errorResponse.getStatusCode()));
+        }
         FlutterWebviewPlugin.channel.invokeMethod("onHttpError", data);
+    }
+
+    @Override
+    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            view.loadUrl(request.getUrl().toString());
+            return true;
+        }
+        return true;
     }
 }
