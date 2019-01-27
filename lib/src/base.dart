@@ -29,6 +29,8 @@ class FlutterWebviewPlugin {
   final _onScrollXChanged = StreamController<double>.broadcast();
   final _onScrollYChanged = StreamController<double>.broadcast();
   final _onHttpError = StreamController<WebViewHttpError>.broadcast();
+  final _onJavascriptMessageReceived =
+      StreamController<JavascriptMessage>.broadcast();
 
   Future<Null> _handleMessages(MethodCall call) async {
     switch (call.method) {
@@ -51,8 +53,13 @@ class FlutterWebviewPlugin {
           ),
         );
         break;
+      case 'onJavascriptMessage':
+        _onJavascriptMessageReceived
+            .add(JavascriptMessage.fromMap(Map<String, dynamic>.from(call.arguments)));
+        break;
       case 'onHttpError':
-        _onHttpError.add(WebViewHttpError(call.arguments['code'], call.arguments['url']));
+        _onHttpError.add(
+            WebViewHttpError(call.arguments['code'], call.arguments['url']));
         break;
     }
   }
@@ -67,6 +74,10 @@ class FlutterWebviewPlugin {
   /// content is Map for type: {shouldStart(iOS)|startLoad|finishLoad}
   /// more detail than other events
   Stream<WebViewStateChanged> get onStateChanged => _onStateChanged.stream;
+
+  /// Android only: Listening for javascript messages
+  Stream<JavascriptMessage> get onJavascriptMessageReceived =>
+      _onJavascriptMessageReceived.stream;
 
   /// Listening web view y position scroll change
   Stream<double> get onScrollYChanged => _onScrollYChanged.stream;
@@ -94,7 +105,8 @@ class FlutterWebviewPlugin {
   /// - [withLocalUrl]: allow url as a local path
   ///     Allow local files on iOs > 9.0
   /// - [scrollBar]: enable or disable scrollbar
-  Future<Null> launch(String url, {
+  Future<Null> launch(
+    String url, {
     Map<String, String> headers,
     bool withJavascript,
     bool clearCache,
@@ -175,10 +187,12 @@ class FlutterWebviewPlugin {
   }
 
   // Clean cookies on WebView
-  Future<Null> cleanCookies() async => await _channel.invokeMethod('cleanCookies');
+  Future<Null> cleanCookies() async =>
+      await _channel.invokeMethod('cleanCookies');
 
   // Stops current loading process
-  Future<Null> stopLoading() async => await _channel.invokeMethod('stopLoading');
+  Future<Null> stopLoading() async =>
+      await _channel.invokeMethod('stopLoading');
 
   /// Close all Streams
   void dispose() {
@@ -188,6 +202,7 @@ class FlutterWebviewPlugin {
     _onScrollXChanged.close();
     _onScrollYChanged.close();
     _onHttpError.close();
+    _onJavascriptMessageReceived.close();
     _instance = null;
   }
 
@@ -240,6 +255,34 @@ class WebViewStateChanged {
   final WebViewState type;
   final String url;
   final int navigationType;
+}
+
+enum JavascriptMessageType { unknown, cancel, finish, popup }
+
+class JavascriptMessage {
+  JavascriptMessage(this.type, this.data);
+
+  factory JavascriptMessage.fromMap(Map<String, dynamic> map) {
+    print('Reaches constructor');
+    final String message = map.containsKey('message') ? map['message'] : null;
+    final String data = map.containsKey('data') ? map['data'] : null;
+    return JavascriptMessage(_getMessageType(message), data);
+  }
+
+  static JavascriptMessageType _getMessageType(String message) {
+    switch (message) {
+      case 'cancel':
+        return JavascriptMessageType.cancel;
+      case 'finish':
+        return JavascriptMessageType.finish;
+      case 'popup':
+        return JavascriptMessageType.popup;
+    }
+    return JavascriptMessageType.unknown;
+  }
+
+  final JavascriptMessageType type;
+  final String data;
 }
 
 class WebViewHttpError {

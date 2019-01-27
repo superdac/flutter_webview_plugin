@@ -253,7 +253,7 @@ class WebviewManager {
 
             String htmlString = new String(rawData, "UTF-8");
             webView.loadDataWithBaseURL(null, htmlString, "text/html", "UTF-8", null);
-
+            webView.addJavascriptInterface(new JavascriptHandler(), "MyHandler");
             return;
         }
 
